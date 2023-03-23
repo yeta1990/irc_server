@@ -69,4 +69,5 @@ void	Message::privateMessage(std::string message, Client &client, Client& destin
 
 	payload = MSG(client.getLogin(), "PRIVMSG", destinationUser.getNickname(), message);	
 	send(destinationUser.getFd(), payload.c_str(), payload.size(), 0);
+	this->server->log(destinationUser.getFd(), payload, 2);
 }
