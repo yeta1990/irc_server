@@ -535,8 +535,9 @@ void	Server::setup(void)
 	on = 1;
 	rc = 1;
 	socketfd = -1;
-    if ((socketfd = socket(AF_INET6, SOCK_STREAM, 0)) == -1) {
-        std::cerr << "Cant create socket\n";
+    if ((socketfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+	std::cerr << "joder";
+	std::cerr << strerror(errno) << std::endl;
 		exit(1);
     }
 	rc = setsockopt(socketfd, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on));

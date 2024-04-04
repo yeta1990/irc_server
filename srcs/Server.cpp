@@ -79,14 +79,20 @@ void	Server::run(void)
 		{
 			if (_fds[position].fd == -1)
 				continue ;
-			else if (_fds[position].revents == 0)
+			else if (_fds[position].revents == 0){
 				continue ;
+			}
 			else if (_fds[position].revents & (POLLERR|POLLHUP|POLLNVAL))
+			{
+				std::cout << "conn error";
 				this->connectionError(position);
+			}
 			else if (position == 0)
 				this->newConnection(_fds[0].fd);
-			else if (_fds[position].revents == POLLIN)
+			else if (_fds[position].revents == POLLIN){
+				std::cout << "revents and poller";
 				this->incomingMessage(_fds[position].fd);
+			}
 		}
 	}
 }
@@ -316,10 +322,11 @@ void	Server::execInstruction(std::string key, std::string value, Client &c)
 		c.sendReply(PONG(value));
 	else if (registrationCommand)
 		registrationCommand->exec(trimSpaces(value), c);
-	else if (compareCaseInsensitive(key, "CAP") && !compareCaseInsensitive(value, "END"))
-		c.sendReply("CAP * LS :");
-	else if (!c.isChallengePassed())
-		c.terminator();
+	else if (compareCaseInsensitive(key, "CAP") && !compareCaseInsensitive(value, "END")){
+		c.sendReply("CAP * LS");
+	}
+	//else if (!c.isChallengePassed())
+	//	c.terminator();
 	else if (c.isChallengePassed() && !c.isRegistered())
 		c.sendReply(ERR_NOTREGISTERED(c.getNickname()));
 }
@@ -529,13 +536,13 @@ void	Server::setup(void)
     int socketfd;
 	int rc;
 	int	on;
-    struct	sockaddr_in6	serv_addr;
+    struct	sockaddr_in	serv_addr;
 
 	socketfd = -1;
 	on = 1;
 	rc = 1;
 	socketfd = -1;
-    if ((socketfd = socket(AF_INET6, SOCK_STREAM, 0)) == -1) {
+    if ((socketfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
         std::cerr << "Cant create socket\n";
 		exit(1);
     }
@@ -554,10 +561,11 @@ void	Server::setup(void)
 		exit(1);
 	}
     memset(&serv_addr, 0, sizeof(serv_addr));
-    serv_addr.sin6_family = AF_INET6;
-    serv_addr.sin6_port = htons(this->_port);
-    serv_addr.sin6_addr = in6addr_any;
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(this->_port);
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
     if (bind(socketfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0){
+	    std::cerr << strerror(errno) << std::endl;
         std::cerr << "Cant bind socket\n";
         close(socketfd);
 		exit(1);
@@ -567,7 +575,7 @@ void	Server::setup(void)
         close(socketfd);
 		exit(1);
     }
-    std::cout << "[Socket listening at port " << ntohs(serv_addr.sin6_port) << "]\n";
+    std::cout << "[Socket listening at port " << ntohs(serv_addr.sin_port) << "]\n";
 	_fds[0].fd = socketfd;
 	_fds[0].events = POLLIN;
 }
